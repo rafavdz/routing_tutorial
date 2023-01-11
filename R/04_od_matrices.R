@@ -31,6 +31,7 @@ library(sf)
 library(tidyverse)
 library(mapview)
 
+# Uncomment to download Data Zones and NHS health board geometries
 # # Create directory for data zones
 # dir.create("data/datazones")
 # # Download data zones
