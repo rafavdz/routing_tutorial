@@ -19,7 +19,8 @@ library(tidyverse)
 
 # Transform ATOC (rail data) ----------------------------------------------
 
-# Data source: https://data.atoc.org/?q=user
+# Requires manual download
+# Source: https://data.atoc.org/?q=user
 
 # Transform ATOC to GTFS
 path_in <- "data/20221105_ttis543.zip"

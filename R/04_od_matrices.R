@@ -13,7 +13,7 @@
 # Set r5r and java pars ---------------------------------------------------
 
 # Set memory to be used
-options(java.parameters = "-Xmx62G")
+options(java.parameters = "-Xmx4G")
 library(r5r)
 
 # R5R Directory
@@ -52,7 +52,6 @@ library(mapview)
 # # Unzip files
 # # Unzip data zone files
 # unzip("data/healthboards/healthboards.zip", exdir = "data/healthboards/")
-
 
 # Read health board boundaries
 healthboard <- st_read("data/healthboards/SG_NHS_HealthBoards_2019.shp")
@@ -126,6 +125,7 @@ data_zones %>%
   infirmary_point + 
   scale_fill_viridis_c(direction = -1) +
   theme_minimal()
+
 
 # Detailed travel time matrix ---------------------------------------------
 
@@ -217,6 +217,7 @@ time_window <- 60
 # Percentiles
 pcts <- c(25, 50, 75)
 
+
 # Compute travel time matrix
 ata_ttm <-
   travel_time_matrix(
@@ -224,8 +225,7 @@ ata_ttm <-
     origins = glasgow_centroids, 
     destinations = hospitals, 
     mode = mode,
-    departure_datetime = departure_datetime, 
-    max_trip_duration = max_trip_duration, 
+    departure_datetime = departure_datetime,
     walk_speed =  walk_speed, 
     max_walk_dist = max_walk_dist, 
     time_window = time_window, 
@@ -241,7 +241,7 @@ nearest_hospital <- ata_ttm %>%
   summarise(
     travel_time_p25 = min(travel_time_p025, na.rm = TRUE),
     travel_time_p50 = min(travel_time_p050, na.rm = TRUE),
-    p75 = min(travel_time_p075, na.rm = TRUE)
+    travel_time_p75 = min(travel_time_p075, na.rm = TRUE)
 )
 
 # Summary
@@ -258,3 +258,65 @@ nearest_hospital %>%
   scale_fill_viridis_b(direction = -1, breaks = seq(0, 90, 15)) +
   theme_minimal() +
   theme(legend.position = "bottom")
+
+
+# # Detailed matrix -----------------------------------------------------------
+# 
+# 
+# # Detailed route matrix
+# detailed_ata <-
+#   lapply(1:nrow(hospitals), function(x){
+#     r5r::detailed_itineraries(
+#       r5r_core = r5r_core, 
+#       origins = glasgow_centroids, 
+#       destinations = hospitals[x,], 
+#       mode = mode,
+#       departure_datetime = departure_datetime, 
+#       max_trip_duration = max_trip_duration, 
+#       walk_speed =  walk_speed, 
+#       max_walk_dist = max_walk_dist, 
+#       shortest_path = TRUE,
+#       verbose = FALSE
+#     )
+#   }
+# )
+# # Bind DF
+# detailed_ata <- 
+#   detailed_ata %>% 
+#     purrr::keep(~nrow(.) > 0) %>% 
+#     bind_rows()
+# 
+# # Find nearest
+# nearest_hosp <- detailed_ata %>% 
+#   group_by(fromId) %>% 
+#   slice_min(total_duration)
+# 
+# # Location of hospitals
+# nearest_dz <- data_zones %>% 
+#   filter(DataZone %in% unique(nearest_hosp$fromId))
+# # Map routes
+# nearest_map <- nearest_hosp %>% 
+#   left_join(st_set_geometry(hospitals, NULL), by = c("toId" = "id")) %>% 
+#   ggplot() +
+#   geom_sf(aes(col = LocationName), alpha = 0.5, size = 14) +
+#   geom_sf(
+#     data = name_hosp, 
+#     aes(col = LocationName),
+#     fill = "white", pch=21, size = 1.5, stroke = 1.35
+#   ) +
+#   labs(
+#     title  = "Closest acute hospital by public transport in Greater Glasgow Area",
+#     col = ""
+#   ) +
+#   theme_void()
+# 
+# # Folder for outputs
+# dir.create("output")
+# 
+# # Save map
+# ggsave(
+#   "output/neares_hospital.png", 
+#   nearest_map,
+#   height = 6, width = 9,
+#   dpi = 400, bg = 'white'
+# )

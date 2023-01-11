@@ -16,9 +16,10 @@
 # Requires JDK version is 11
 # Verify Java version
 system("java -version")
+# This should display the name of the version, e.g. >java version “11.0.17”
 
 # Allocate RAM to Java 
-options(java.parameters = "-Xmx62G")
+options(java.parameters = "-Xmx4G")
 # Load R5R
 library(r5r)
 
@@ -29,27 +30,27 @@ library(r5r)
 # Define R5R directory
 r5r_dir <- 'scotland_router'
 
-# # Create directory to store input data and network
-# dir.create(r5r_dir)
-
-# # Copy input files
-# input_files <- list.files(
-#   'data', recursive = TRUE, 
-#   pattern = 'gtfs\\.zip$|pbf$', 
-#   full.names = TRUE
-# )
-# lapply(input_files, function(x) 
-#   file.copy(x, paste0(r5r_dir, '/', basename(x)), overwrite = TRUE)
-# )
-
+## Run if this is a new network
+# Create directory to store input data and network
+dir.create(r5r_dir)
+# Copy input files
+input_files <- list.files(
+  'data', recursive = TRUE,
+  pattern = 'gtfs\\.zip$|pbf$',
+  full.names = TRUE
+)
+lapply(input_files, function(x)
+  file.copy(x, paste0(r5r_dir, '/', basename(x)), overwrite = TRUE)
+)
 
 # Build/read multimodal transport network
 # Indicate the path where OSM and GTFS data are stored
+# This may take a while if it the package/network is new
 r5r_core <- setup_r5(data_path = r5r_dir, verbose = TRUE)
 gc(reset = TRUE)
 
 
-# Points in Glasgow -------------------------------------------------------
+# Single Origin-Destination points ----------------------------------------
 
 library(sf)
 library(tidyverse)
@@ -73,10 +74,7 @@ max_trip_duration <- 4*60L
 # Walk speed (Km/h), Def. to 3.6 Km/h 
 walk_speed <- 4.8
 # Time and date of departure
-departure_datetime <- as.POSIXct(
-  x = "09-11-2022 08:00:00", 
-  format = "%d-%m-%Y %H:%M:%S"
-)
+departure_datetime <- as.POSIXct("2022-11-09 08:00:00")
 
 # Estimate pedestrian route
 pedestrian_route <- 
@@ -104,7 +102,7 @@ mapview(pedestrian_route, zcol = "mode", lwd = 4)
 
 # Mode
 mode <-c("BICYCLE")
-# bike_speed, Def. to 12 Km/h
+# bike_speed, defaults to 12 Km/h
 bike_speed <- 16.5
 # Level of traffic stress (lts)
 # 1 low - 4 high, Default is 2
@@ -127,14 +125,15 @@ bike_route <-
 )
 # Bind results
 bike_route <- bind_rows(bike_route, .id = "stress_level")
-bike_route
+
+# Print results total duration/distance by stress level
+bike_route[,c('stress_level', 'total_duration', 'distance')]
 
 # Map route
 mapview(bike_route, zcol = "stress_level", lwd = 4)
 
 
 # Public transport route --------------------------------------------------
-
 
 # Routing inputs
 # Mode
@@ -153,6 +152,8 @@ pt_route <-
     max_trip_duration = max_trip_duration, 
     walk_speed =  walk_speed, 
     max_walk_dist = max_walk_dist,
+    # If shortest_path is FALSE, it will return all options available
+    # If it is TRUE, it will return the fastest
     shortest_path = FALSE
 )
 
@@ -183,7 +184,7 @@ pt_route
 mapview(pt_route, zcol = "mode", lwd = 3)
 
 
-# Map modes ---------------------------------------------------------------
+# Map all modes ---------------------------------------------------------------
 
 # Alternative modes
 mapview(pedestrian_route, color = "red", layer.name = "Pedestrian") +
