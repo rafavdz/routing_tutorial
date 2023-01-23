@@ -111,6 +111,7 @@ single_ttm <-
     verbose = FALSE
 )
 # Head
+dim(single_ttm)
 head(single_ttm)
 
 # Location of Glasgow Royal Infirmary
@@ -144,6 +145,8 @@ breakdown_ttm <-
     breakdown = TRUE,
     verbose = FALSE
   )
+# Dimention
+dim(breakdown_ttm)
 # Head
 head(breakdown_ttm)
 
@@ -219,7 +222,7 @@ time_window <- 60
 pcts <- c(25, 50, 75)
 
 
-# Compute travel time matrix
+# Compute travel time matrix (this takes more time)
 ata_ttm <-
   travel_time_matrix(
     r5r_core = r5r_core, 
@@ -228,11 +231,13 @@ ata_ttm <-
     mode = mode,
     departure_datetime = departure_datetime,
     walk_speed =  walk_speed, 
-    max_walk_dist = max_walk_dist, 
+    max_walk_dist = max_walk_dist,
     time_window = time_window, 
     percentiles = pcts,
     verbose = FALSE
 )
+# Dimensions
+dim(ata_ttm)
 # Head
 head(ata_ttm)
 

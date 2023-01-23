@@ -159,6 +159,9 @@ pt_route <-
 
 # Print routes
 pt_route
+
+# Options as factor
+pt_route$option <- factor(pt_route$option)
 # Number of options
 n_distinct(pt_route$option)
 # Map route
@@ -187,7 +190,9 @@ mapview(pt_route, zcol = "mode", lwd = 3)
 # Map all modes ---------------------------------------------------------------
 
 # Alternative modes
-mapview(pedestrian_route, color = "red", layer.name = "Pedestrian") +
-  mapview(bike_route, color = "green", layer.name = "Bicycle") +
-  mapview(pt_route, color = "orange", layer.name = "PT")
+mapview(bike_route, color = "#277f8e", layer.name = "Bicycle") +
+  mapview(pedestrian_route, color = "#fde725", layer.name = "Pedestrian") +
+  mapview(pt_route, color = "#440154", layer.name = "PT")
 
+# Clean environment (removes all objects)
+rm(list = ls())

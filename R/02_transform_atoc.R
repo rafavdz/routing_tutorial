@@ -22,9 +22,12 @@ library(tidyverse)
 # Requires manual download
 # Source: https://data.atoc.org/?q=user
 
+# Detect number of cores
+n_cores <- parallel::detectCores() -1
+
 # Transform ATOC to GTFS
 path_in <- "data/20221105_ttis543.zip"
-ttis543 <- atoc2gtfs(path_in = path_in, shapes = TRUE, ncores = 14)
+ttis543 <- atoc2gtfs(path_in = path_in, shapes = TRUE, ncores = n_cores)
 
 # Save as GTFS ------------------------------------------------------------
 
