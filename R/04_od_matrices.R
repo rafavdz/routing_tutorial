@@ -22,37 +22,38 @@ r5r_dir <- 'scotland_router'
 r5r_core <- setup_r5(data_path = r5r_dir, verbose = TRUE)
 gc(reset = TRUE)
 
-
-# Origins: Data zones in Greater Glasgow  ---------------------------------
-
-
 # Packages
 library(sf)
 library(tidyverse)
 library(mapview)
 
-# Uncomment to download Data Zones and NHS health board geometries
-# # Create directory for data zones
-# dir.create("data/datazones")
-# # Download data zones
-# download.file(
-#   "https://maps.gov.scot/ATOM/shapefiles/SG_DataZoneBdry_2011.zip",
-#   "data/datazones/datazones.zip"
-# )
-# # Unzip data zone files
-# unzip("data/datazones/datazones.zip", exdir = "data/datazones/")
-# 
-# # NHS health boards
-# # Directory
-# dir.create("data/healthboards")
-# # Download boundaries
-# download.file(
-#   "https://maps.gov.scot/ATOM/shapefiles/SG_NHS_HealthBoards_2019.zip",
-#   "data/healthboards/healthboards.zip"
-# )
-# # Unzip files
-# # Unzip data zone files
-# unzip("data/healthboards/healthboards.zip", exdir = "data/healthboards/")
+
+# Origins: Download Data Zones and NHS health board geometries ------------
+ 
+# Create directory for data zones
+dir.create("data/datazones")
+# Download data zones
+download.file(
+  "https://maps.gov.scot/ATOM/shapefiles/SG_DataZoneBdry_2011.zip",
+  "data/datazones/datazones.zip"
+)
+# Unzip data zone files
+unzip("data/datazones/datazones.zip", exdir = "data/datazones/")
+
+# NHS health boards
+# Directory
+dir.create("data/healthboards")
+# Download boundaries
+download.file(
+  "https://maps.gov.scot/ATOM/shapefiles/SG_NHS_HealthBoards_2019.zip",
+  "data/healthboards/healthboards.zip"
+)
+# Unzip files
+# Unzip data zone files
+unzip("data/healthboards/healthboards.zip", exdir = "data/healthboards/")
+
+
+# Read data zones ---------------------------------------------------------
 
 # Read health board boundaries
 healthboard <- st_read("data/healthboards/SG_NHS_HealthBoards_2019.shp")
