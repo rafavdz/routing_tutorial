@@ -145,7 +145,7 @@ breakdown_ttm <-
     breakdown = TRUE,
     verbose = FALSE
   )
-# Dimention
+# Dimension
 dim(breakdown_ttm)
 # Head
 head(breakdown_ttm)
@@ -175,7 +175,7 @@ data_zones %>%
 data_zones %>% 
   left_join(breakdown_ttm, by = c("DataZone" = "fromId")) %>% 
   drop_na() %>% 
-  pivot_longer(c(access_time, egress_time)) %>% 
+  pivot_longer(c('access_time', 'egress_time')) %>% 
   ggplot() +
   geom_sf(aes(fill = value), col = NA) +
   scale_fill_viridis_b(breaks = seq(0, 15, 5), direction = -1) +
@@ -222,7 +222,7 @@ time_window <- 60
 pcts <- c(25, 50, 75)
 
 
-# Compute travel time matrix (this takes more time)
+# Compute travel time matrix (May take several minutes in low spec machines)
 ata_ttm <-
   travel_time_matrix(
     r5r_core = r5r_core, 
