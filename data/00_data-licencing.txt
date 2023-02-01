@@ -1,0 +1,12 @@
+OpenStreetMap (OSM) data
+Attribution must be to “OpenStreetMap”.
+OpenStreetMap® is open data, licensed under the Open Data Commons Open Database License (ODbL) by the OpenStreetMap Foundation (OSMF).
+
+Bus Open Data Service
+https://data.bus-data.dft.gov.uk/
+"It is free open data, and does not require a licence. Simply start using the APIs or downloading data for your analysis, apps, products or services."
+
+Rail Delivery Group (Formerly ATOC)
+Attribution must be to “National Rail Enquiries”.
+THE WORK (AS DEFINED BELOW) IS PROVIDED UNDER THE TERMS OF THIS CREATIVE COMMONS PUBLIC LICENCE ("CCPL" OR "LICENCE").
+"The National Rail Enquiries service (NRE) supports the principle of transparency and contributes to the wider industry agenda by making data openly available in the public domain, for third party developers to use to create their own products and applications."
