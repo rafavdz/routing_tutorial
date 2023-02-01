@@ -8,6 +8,10 @@
 
 # Date: December 2022
 
+# THIS CODE IS FOR REFERECE ONLY
+# YOU DO NOT NEED TO RUN THIS SCRIPT AS DATA ALREADY EXIST IN REPOSITORY
+
+
 # Packages ----------------------------------------------------------------
 
 # Uses UK2GTFS V. ‘0.1.1’
