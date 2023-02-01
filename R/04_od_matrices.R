@@ -12,6 +12,8 @@
 
 # Set r5r and java pars ---------------------------------------------------
 
+# Uses r5r V. 1.0.0
+
 # Set memory to be used
 options(java.parameters = "-Xmx4G")
 library(r5r)
@@ -19,7 +21,7 @@ library(r5r)
 # R5R Directory
 r5r_dir <- 'scotland_router'
 # Read network
-r5r_core <- setup_r5(data_path = r5r_dir, verbose = TRUE)
+r5r_core <- setup_r5(data_path = r5r_dir)
 gc(reset = TRUE)
 
 # Packages
@@ -81,12 +83,13 @@ departure_datetime <- as.POSIXct(
   x = "09-11-2022 08:00:00", 
   format = "%d-%m-%Y %H:%M:%S"
 )
+
 # Max trip duration, Def. 120 (min)
 max_trip_duration <- 90
 # Walk speed (Km/h), Def. to 3.6 Km/h 
 walk_speed <- 4.8
-# Max walk dist
-max_walk_dist <- 1000
+# Max walk time in minutes
+max_walk_time <- 15
 
 
 # Single travel time matrix -----------------------------------------------
@@ -108,7 +111,7 @@ single_ttm <-
     departure_datetime = departure_datetime, 
     max_trip_duration = max_trip_duration, 
     walk_speed =  walk_speed, 
-    max_walk_dist = max_walk_dist,
+    max_walk_time = max_walk_time,
     verbose = FALSE
 )
 # Head
@@ -121,10 +124,10 @@ infirmary_point <-
 
 # Visualize travel time to Royal Infirmary
 data_zones %>% 
-  left_join(single_ttm, by = c("DataZone" = "fromId")) %>% 
+  left_join(single_ttm, by = c("DataZone" = "from_id")) %>% 
   drop_na() %>% 
   ggplot() +
-  geom_sf(aes(fill = travel_time), col = NA) +
+  geom_sf(aes(fill = travel_time_p50), col = NA) +
   infirmary_point + 
   scale_fill_viridis_c(direction = -1) +
   theme_minimal()
@@ -134,18 +137,19 @@ data_zones %>%
 
 # Estimate detailed travel time distance to a single destination
 breakdown_ttm <-
-  travel_time_matrix(
+  expanded_travel_time_matrix(
     r5r_core = r5r_core,
     origins = glasgow_centroids,
     destinations = royal_infirmary,
     mode = mode,
     departure_datetime = departure_datetime,
     max_trip_duration = max_trip_duration,
-    walk_speed = walk_speed,
-    max_walk_dist = max_walk_dist,
-    breakdown = TRUE,
-    verbose = FALSE
+    walk_speed =  walk_speed, 
+    max_walk_time = max_walk_time, 
+    breakdown = TRUE 
   )
+
+
 # Dimension
 dim(breakdown_ttm)
 # Head
@@ -153,34 +157,37 @@ head(breakdown_ttm)
 
 # Visualize number of rides
 data_zones %>% 
-  left_join(breakdown_ttm, by = c("DataZone" = "fromId")) %>% 
+  left_join(breakdown_ttm, by = c("DataZone" = "from_id")) %>% 
   drop_na() %>% 
   mutate(n_rides = factor(n_rides)) %>%
   ggplot() +
   geom_sf(aes(fill = n_rides), col = NA) +
   infirmary_point +
   scale_fill_viridis_d(direction = -1) +
+  labs(fill = "Rides \n(number)") +
   theme_minimal()
 
 # Visualize wait time
 data_zones %>% 
-  left_join(breakdown_ttm, by = c("DataZone" = "fromId")) %>% 
+  left_join(breakdown_ttm, by = c("DataZone" = "from_id")) %>% 
   drop_na() %>% 
   ggplot() +
   geom_sf(aes(fill = wait_time), col = NA) +
   infirmary_point + 
   scale_fill_viridis_b(breaks = seq(0, 15, 5), direction = -1) +
+  labs(fill = "Wait time\n(minutes)") +
   theme_minimal()
 
 # Visualize access/egress time
 data_zones %>% 
-  left_join(breakdown_ttm, by = c("DataZone" = "fromId")) %>% 
+  left_join(breakdown_ttm, by = c("DataZone" = "from_id")) %>% 
   drop_na() %>% 
   pivot_longer(c('access_time', 'egress_time')) %>% 
   ggplot() +
   geom_sf(aes(fill = value), col = NA) +
   scale_fill_viridis_b(breaks = seq(0, 15, 5), direction = -1) +
   facet_wrap(~name) +
+  labs(fill = 'Minutes') +
   theme_void()
 
 
@@ -218,7 +225,7 @@ hospitals <- rename(hospitals, id = Location)
 # All to all travel time matrix -------------------------------------------
 
 # Time window in minutes
-time_window <- 60
+time_window <- 30
 # Percentiles
 pcts <- c(25, 50, 75)
 
@@ -232,10 +239,9 @@ ata_ttm <-
     mode = mode,
     departure_datetime = departure_datetime,
     walk_speed =  walk_speed, 
-    max_walk_dist = max_walk_dist,
+    max_walk_time = max_walk_time, 
     time_window = time_window, 
-    percentiles = pcts,
-    verbose = FALSE
+    percentiles = pcts
 )
 # Dimensions
 dim(ata_ttm)
@@ -244,11 +250,11 @@ head(ata_ttm)
 
 # Find nearest hospital for each percentile
 nearest_hospital <- ata_ttm %>% 
-  group_by(fromId) %>% 
+  group_by(from_id) %>% 
   summarise(
-    travel_time_p25 = min(travel_time_p025, na.rm = TRUE),
-    travel_time_p50 = min(travel_time_p050, na.rm = TRUE),
-    travel_time_p75 = min(travel_time_p075, na.rm = TRUE)
+    travel_time_p25 = min(travel_time_p25, na.rm = TRUE),
+    travel_time_p50 = min(travel_time_p50, na.rm = TRUE),
+    travel_time_p75 = min(travel_time_p75, na.rm = TRUE)
 )
 
 # Summary
@@ -256,8 +262,8 @@ summary(nearest_hospital)
 
 # Plot nearest hospital by percentile
 nearest_hospital %>% 
-  pivot_longer(-fromId, names_to = "percentil", values_to = "travel_time") %>% 
-  left_join(data_zones, by = c("fromId" = "DataZone")) %>%
+  pivot_longer(-from_id, names_to = "percentil", values_to = "travel_time") %>% 
+  left_join(data_zones, by = c("from_id" = "DataZone")) %>%
   st_as_sf() %>% 
   ggplot() +
   geom_sf(aes(fill = travel_time), col = NA) +
@@ -267,63 +273,4 @@ nearest_hospital %>%
   theme(legend.position = "bottom")
 
 
-# # Detailed matrix -----------------------------------------------------------
-# 
-# 
-# # Detailed route matrix
-# detailed_ata <-
-#   lapply(1:nrow(hospitals), function(x){
-#     r5r::detailed_itineraries(
-#       r5r_core = r5r_core, 
-#       origins = glasgow_centroids, 
-#       destinations = hospitals[x,], 
-#       mode = mode,
-#       departure_datetime = departure_datetime, 
-#       max_trip_duration = max_trip_duration, 
-#       walk_speed =  walk_speed, 
-#       max_walk_dist = max_walk_dist, 
-#       shortest_path = TRUE,
-#       verbose = FALSE
-#     )
-#   }
-# )
-# # Bind DF
-# detailed_ata <- 
-#   detailed_ata %>% 
-#     purrr::keep(~nrow(.) > 0) %>% 
-#     bind_rows()
-# 
-# # Find nearest
-# nearest_hosp <- detailed_ata %>% 
-#   group_by(fromId) %>% 
-#   slice_min(total_duration)
-# 
-# # Location of hospitals
-# nearest_dz <- data_zones %>% 
-#   filter(DataZone %in% unique(nearest_hosp$fromId))
-# # Map routes
-# nearest_map <- nearest_hosp %>% 
-#   left_join(st_set_geometry(hospitals, NULL), by = c("toId" = "id")) %>% 
-#   ggplot() +
-#   geom_sf(aes(col = LocationName), alpha = 0.5, size = 14) +
-#   geom_sf(
-#     data = name_hosp, 
-#     aes(col = LocationName),
-#     fill = "white", pch=21, size = 1.5, stroke = 1.35
-#   ) +
-#   labs(
-#     title  = "Closest acute hospital by public transport in Greater Glasgow Area",
-#     col = ""
-#   ) +
-#   theme_void()
-# 
-# # Folder for outputs
-# dir.create("output")
-# 
-# # Save map
-# ggsave(
-#   "output/neares_hospital.png", 
-#   nearest_map,
-#   height = 6, width = 9,
-#   dpi = 400, bg = 'white'
-# )
+

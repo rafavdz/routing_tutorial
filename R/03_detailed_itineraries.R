@@ -9,10 +9,9 @@
 
 # Date: December 2022
 
+# Set r5r and Java pars ---------------------------------------------------
 
-# Set r5r and java pars ---------------------------------------------------
-
-# Uses R5R V. ‘0.7.1’
+# Uses R5R V. 1.0.0
 # Requires JDK version is 11
 # Verify Java version
 system("java -version")
@@ -40,14 +39,16 @@ input_files <- list.files(
   full.names = TRUE
 )
 lapply(input_files, function(x)
-  file.copy(x, paste0(r5r_dir, '/', basename(x)), overwrite = TRUE)
+  file.copy(x, paste0(r5r_dir, '/', basename(x)))
 )
 
 # Build/read multimodal transport network
 # Indicate the path where OSM and GTFS data are stored
-# This may take a while if it the package/network is new
+# This may take few minutes
 r5r_core <- setup_r5(data_path = r5r_dir, verbose = TRUE)
+
 gc(reset = TRUE)
+
 
 
 # Single Origin-Destination points ----------------------------------------
@@ -95,7 +96,7 @@ class(pedestrian_route)
 pedestrian_route
 
 # Map route
-mapview(pedestrian_route, zcol = "mode", lwd = 4)
+mapview(pedestrian_route, zcol = "mode", lwd = 5)
 
 
 # Cycling route -----------------------------------------------------------
@@ -138,37 +139,10 @@ mapview(bike_route, zcol = "stress_level", lwd = 4)
 # Routing inputs
 # Mode
 mode <- c("WALK", "TRANSIT")
-# Max. access/egress walk dist.
-max_walk_dist <- 1500
+# Max. access/egress walk time in minutes
+max_walk_time <- 15
 
-# Estimate PT route - Multiple options
-pt_route <- 
-  detailed_itineraries(
-    r5r_core = r5r_core, 
-    origins = glasgow_central, 
-    destinations = milngavie, 
-    mode = mode,
-    departure_datetime = departure_datetime, 
-    max_trip_duration = max_trip_duration, 
-    walk_speed =  walk_speed, 
-    max_walk_dist = max_walk_dist,
-    # If shortest_path is FALSE, it will return all options available
-    # If it is TRUE, it will return the fastest
-    shortest_path = FALSE
-)
-
-# Print routes
-pt_route
-
-# Options as factor
-pt_route$option <- factor(pt_route$option)
-# Number of options
-n_distinct(pt_route$option)
-# Map route
-mapview(pt_route, zcol = "option", lwd = 3)
-
-
-# Estimate best PT route
+# Estimate fastest PT route - fixed departure time
 pt_route <- 
   detailed_itineraries(
     r5r_core = r5r_core, 
@@ -178,13 +152,48 @@ pt_route <-
     departure_datetime = departure_datetime, 
     max_trip_duration = max_trip_duration, 
     walk_speed =  walk_speed, 
-    max_walk_dist = max_walk_dist,
-    shortest_path = TRUE
+    max_walk_dist = max_walk_dist
   )
 # Print route
 pt_route
 # Map route
-mapview(pt_route, zcol = "mode", lwd = 3)
+mapview(pt_route, zcol = "mode", lwd = 5)
+
+
+# Define a time window
+time_window <- 30
+
+# Estimate PT options - Flexible departure time
+pt_multiple <-
+  detailed_itineraries(
+    r5r_core = r5r_core,
+    origins = glasgow_central,
+    destinations = milngavie,
+    mode = mode,
+    departure_datetime = departure_datetime,
+    max_trip_duration = max_trip_duration,
+    max_walk_time = max_walk_time,
+    walk_speed =  walk_speed,
+    time_window = time_window,
+    # If shortest_path is FALSE, it will return all options available
+    # If it is TRUE, it will return the fastest
+    shortest_path = FALSE
+  )
+
+# Print routes
+pt_multiple
+
+# Options as factor
+pt_route$option <- factor(pt_route$option)
+# Number of options
+n_distinct(pt_route$option)
+# Time of departure
+sort(unique(pt_route$departure_time))
+# Total duration
+sort(unique(pt_route$total_duration))
+
+# Map routes
+mapview(pt_route, zcol = "option", lwd = 3)
 
 
 # Map all modes ---------------------------------------------------------------
