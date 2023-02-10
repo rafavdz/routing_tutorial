@@ -64,31 +64,35 @@ healthboard <- filter(healthboard, HBName == "Greater Glasgow and Clyde")
 
 # Read data zones
 data_zones <- st_read("data/datazones/SG_DataZone_Bdry_2011.shp")
-# Define centroids within Glasgow
+# Define geometric centroids within Glasgow
 glasgow_centroids <- data_zones %>% 
   st_centroid() %>% 
   filter(st_intersects(., healthboard, sparse = FALSE)) %>% 
   st_transform(4326)
+# Head
+head(glasgow_centroids)
 
 # Lastly, naming identification column as 'id'
 glasgow_centroids <- rename(glasgow_centroids, id = DataZone)
 
+# Plot centroids
+ggplot() +
+  geom_sf(data = healthboard) +
+  geom_sf(data = glasgow_centroids, shape = 1) +
+  theme_void()
 
 # Travel time parameters --------------------------------------------------
 
 # Mode
 mode <- c("WALK", "TRANSIT")
 # Time and date of departure
-departure_datetime <- as.POSIXct(
-  x = "09-11-2022 08:00:00", 
-  format = "%d-%m-%Y %H:%M:%S"
-)
+departure_datetime <- as.POSIXct("2022-11-09 08:00:00")
 
 # Max trip duration, Def. 120 (min)
 max_trip_duration <- 90
 # Walk speed (Km/h), Def. to 3.6 Km/h 
 walk_speed <- 4.8
-# Max walk time in minutes
+# Max. walk time in minutes
 max_walk_time <- 15
 
 
@@ -96,10 +100,8 @@ max_walk_time <- 15
 
 # Single destination: Glasgow Royal Infirmary
 royal_infirmary <- 
-  data.frame(id = "roy_inf", lon = -4.234407, lat = 55.865749)
-# As SF
-royal_infirmary <-
-  st_as_sf(royal_infirmary, coords = c("lon", "lat"), crs = 4326)
+  data.frame(id = "roy_inf", lon = -4.234407, lat = 55.865749) %>% 
+  st_as_sf(coords = c("lon", "lat"), crs = 4326)
 
 # Estimate simplified travel time distance to a single destination
 single_ttm <-
@@ -130,7 +132,7 @@ data_zones %>%
   geom_sf(aes(fill = travel_time_p50), col = NA) +
   infirmary_point + 
   scale_fill_viridis_c(direction = -1) +
-  theme_minimal()
+  theme_void()
 
 
 # Detailed travel time matrix ---------------------------------------------
@@ -146,7 +148,7 @@ breakdown_ttm <-
     max_trip_duration = max_trip_duration,
     walk_speed =  walk_speed, 
     max_walk_time = max_walk_time, 
-    breakdown = TRUE 
+    breakdown = TRUE
   )
 
 
@@ -165,7 +167,7 @@ data_zones %>%
   infirmary_point +
   scale_fill_viridis_d(direction = -1) +
   labs(fill = "Rides \n(number)") +
-  theme_minimal()
+  theme_void()
 
 # Visualize wait time
 data_zones %>% 
@@ -176,7 +178,7 @@ data_zones %>%
   infirmary_point + 
   scale_fill_viridis_b(breaks = seq(0, 15, 5), direction = -1) +
   labs(fill = "Wait time\n(minutes)") +
-  theme_minimal()
+  theme_void()
 
 # Visualize access/egress time
 data_zones %>% 
@@ -185,6 +187,7 @@ data_zones %>%
   pivot_longer(c('access_time', 'egress_time')) %>% 
   ggplot() +
   geom_sf(aes(fill = value), col = NA) +
+  infirmary_point + 
   scale_fill_viridis_b(breaks = seq(0, 15, 5), direction = -1) +
   facet_wrap(~name) +
   labs(fill = 'Minutes') +
@@ -230,7 +233,7 @@ time_window <- 30
 pcts <- c(25, 50, 75)
 
 
-# Compute travel time matrix (May take several minutes in low spec machines)
+# Compute travel time matrix (May take several minutes)
 ata_ttm <-
   travel_time_matrix(
     r5r_core = r5r_core, 
@@ -269,8 +272,10 @@ nearest_hospital %>%
   geom_sf(aes(fill = travel_time), col = NA) +
   facet_wrap(~percentil) +
   scale_fill_viridis_b(direction = -1, breaks = seq(0, 90, 15)) +
-  theme_minimal() +
+  labs(fill = "Travel time \n(Minutes)") +
+  theme_void() +
   theme(legend.position = "bottom")
+
 
 
 
