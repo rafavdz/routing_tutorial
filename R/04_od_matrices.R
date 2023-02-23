@@ -31,7 +31,7 @@ library(mapview)
 
 
 # Origins: Download Data Zones and NHS health board geometries ------------
- 
+
 # Create directory for data zones
 dir.create("data/datazones")
 # Download data zones
@@ -115,7 +115,7 @@ single_ttm <-
     walk_speed =  walk_speed, 
     max_walk_time = max_walk_time,
     verbose = FALSE
-)
+  )
 # Head
 dim(single_ttm)
 head(single_ttm)
@@ -245,7 +245,7 @@ ata_ttm <-
     max_walk_time = max_walk_time, 
     time_window = time_window, 
     percentiles = pcts
-)
+  )
 # Dimensions
 dim(ata_ttm)
 # Head
@@ -258,7 +258,7 @@ nearest_hospital <- ata_ttm %>%
     travel_time_p25 = min(travel_time_p25, na.rm = TRUE),
     travel_time_p50 = min(travel_time_p50, na.rm = TRUE),
     travel_time_p75 = min(travel_time_p75, na.rm = TRUE)
-)
+  )
 
 # Summary
 summary(nearest_hospital)
