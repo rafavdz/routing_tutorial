@@ -106,7 +106,7 @@ mode <-c("BICYCLE")
 # bike_speed, defaults to 12 Km/h
 bike_speed <- 16.5
 # Level of traffic stress (lts)
-# 1 low - 4 high, Default is 2
+# 1 high - 4 low, Default is 2
 bike_stress <- c(1, 2, 3, 4)
 
 
@@ -123,7 +123,7 @@ bike_route <-
       bike_speed = bike_speed, 
       max_lts = bsl
     )
-)
+  )
 # Bind results
 bike_route <- bind_rows(bike_route, .id = "stress_level")
 
@@ -152,7 +152,7 @@ pt_route <-
     departure_datetime = departure_datetime, 
     max_trip_duration = max_trip_duration, 
     walk_speed =  walk_speed, 
-    max_walk_dist = max_walk_dist
+    max_walk_time = max_walk_time
   )
 # Print route
 pt_route
@@ -184,16 +184,16 @@ pt_multiple <-
 pt_multiple
 
 # Options as factor
-pt_route$option <- factor(pt_route$option)
+pt_multiple$option <- factor(pt_multiple$option)
 # Number of options
-n_distinct(pt_route$option)
+n_distinct(pt_multiple$option)
 # Time of departure
-sort(unique(pt_route$departure_time))
+sort(unique(pt_multiple$departure_time))
 # Total duration
-sort(unique(pt_route$total_duration))
+sort(unique(pt_multiple$total_duration))
 
 # Map routes
-mapview(pt_route, zcol = "option", lwd = 3)
+mapview(pt_multiple, zcol = "option", lwd = 3)
 
 
 # Map all modes ---------------------------------------------------------------
