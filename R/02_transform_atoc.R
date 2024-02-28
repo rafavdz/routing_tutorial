@@ -19,6 +19,8 @@
 # remotes::install_github("ITSleeds/UK2GTFS")
 library(UK2GTFS)
 library(tidyverse)
+library(gtfstools)
+library(sf)
 
 
 # Transform ATOC (rail data) ----------------------------------------------
@@ -60,5 +62,29 @@ UK2GTFS::gtfs_write(ttis543_gtfs, folder = 'data/', name = 'ttis543.gtfs')
 # Clean env.
 rm(list = ls())
 gc(reset = TRUE)
+
+
+# Filter relevant train services ------------------------------------------
+
+# Full GTFS
+ttis543_gtfs <- read_gtfs('data/ttis543.gtfs.zip')
+
+# Define Glasgow area
+glasgow_boundary <- data.frame(x = -4.258950, y = 55.862028) %>% 
+  st_as_sf(coords = c('x', 'y'), crs = 4326) %>% 
+  st_buffer(30e3)
+
+# Filter stops in Glasgow
+stops_glasgow <- gtfstools::convert_stops_to_sf(ttis543_gtfs) 
+stops_glasgow <- stops_glasgow[glasgow_boundary,]
+
+# Filter services connected to Glasgow
+ttis_glasgow <- filter_by_stop_id(ttis543_gtfs, unique(stops_glasgow$stop_id))
+
+# Write Glasgow train services
+write_gtfs(ttis_glasgow, 'data/glasgow_rail.gtfs.zip')
+
+# Remove full GTFS rail file
+unlink('data/ttis543.gtfs.zip')
 
 
