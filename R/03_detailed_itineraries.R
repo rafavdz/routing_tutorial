@@ -27,17 +27,20 @@ library(r5r)
 
 
 # Define R5R directory
-r5r_dir <- 'scotland_router'
+r5r_dir <- 'glasgow_router'
 
-## Run if this is a new network
 # Create directory to store input data and network
 dir.create(r5r_dir)
-# Copy input files
+# Get input files
 input_files <- list.files(
-  'data', recursive = TRUE,
+  'data', 
+  recursive = TRUE,
   pattern = 'gtfs\\.zip$|pbf$',
   full.names = TRUE
 )
+# List input files
+input_files
+# Copy input files
 lapply(input_files, function(x)
   file.copy(x, paste0(r5r_dir, '/', basename(x)))
 )
