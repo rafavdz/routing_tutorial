@@ -59,10 +59,10 @@ unzip("data/healthboards/healthboards.zip", exdir = "data/healthboards/")
 
 # Read health board boundaries
 healthboard <- st_read("data/healthboards/SG_NHS_HealthBoards_2019.shp")
-# Filter Greater Glasgow and Clyde boundary
+# Keep Greater Glasgow and Clyde boundary
 healthboard <- filter(healthboard, HBName == "Greater Glasgow and Clyde")
 
-# Read data zones
+# Read data zones in Scotland
 data_zones <- st_read("data/datazones/SG_DataZone_Bdry_2011.shp")
 # Define geometric centroids within Glasgow
 glasgow_centroids <- data_zones %>% 
@@ -73,7 +73,7 @@ glasgow_centroids <- data_zones %>%
 head(glasgow_centroids)
 
 # Lastly, naming identification column as 'id'
-glasgow_centroids <- rename(glasgow_centroids, id = DataZone)
+glasgow_centroids <- glasgow_centroids %>% rename(id = DataZone)
 
 # Plot centroids
 ggplot() +
@@ -81,7 +81,7 @@ ggplot() +
   geom_sf(data = glasgow_centroids, shape = 1) +
   theme_void()
 
-# Travel time parameters --------------------------------------------------
+# Routing time parameters --------------------------------------------------
 
 # Mode
 mode <- c("WALK", "TRANSIT")
@@ -120,7 +120,7 @@ single_ttm <-
 dim(single_ttm)
 head(single_ttm)
 
-# Location of Glasgow Royal Infirmary
+# Define location of Glasgow Royal Infirmary
 infirmary_point <- 
   geom_sf(data = royal_infirmary, shape = 21, fill = 'white', size = 2)
 
@@ -148,7 +148,8 @@ breakdown_ttm <-
     max_trip_duration = max_trip_duration,
     walk_speed =  walk_speed, 
     max_walk_time = max_walk_time, 
-    breakdown = TRUE
+    breakdown = TRUE, 
+    time_window = 1
   )
 
 
@@ -194,35 +195,21 @@ data_zones %>%
   theme_void()
 
 
-# Destinations: Acute hospitals -------------------------------------------
+# Destinations: Glasgow hospitals -------------------------------------------
 
-# Get data
-# Hospital locations
-hospitals <- read_csv(read_lines('data/hospitals_url.txt'))
-# Beds available
-beds_nhs <- read_csv(read_lines('data/beds_url.txt'))
+# {osmdata} to get data from OpenStreetMap 
+library(osmdata)
 
-# Key for acute hospitals in Scotland 
-hosp_key <- beds_nhs %>% 
-  filter(
-    SpecialtyName == "All Acute Specialties" &
-      FinancialYear == '2021/22' &
-      AllStaffedBeds > 1000
-  ) %>% 
-  pull(Location)
-
-# Keep only acute hospitals in Greater Glasgow
-hospitals <- hospitals %>% 
-  filter(Location %in% hosp_key) 
-# Hospitals as SF and CRS WGS84 (4326)
-hospitals <- hospitals %>% 
-  drop_na(XCoordinate, YCoordinate) %>% 
-  st_as_sf(coords = c('XCoordinate', 'YCoordinate'), crs = 27700) %>% 
-  filter(st_intersects(., healthboard, sparse = FALSE)) %>% 
-  st_transform(4326)
+# Get data from OSM
+hospitals_glasgow <- opq(bbox = 'Glasgow, UK') %>%
+  add_osm_feature(key = 'amenity', value = 'hospital') %>% 
+  osmdata_sf()
+# Represent hospitals with a centroid
+hospitals <- hospitals_glasgow$osm_polygons %>% 
+  st_centroid()
 
 # Name identification column as 'id'
-hospitals <- rename(hospitals, id = Location)
+hospitals <- rename(hospitals, id = osm_id)
 
 
 # All to all travel time matrix -------------------------------------------
@@ -272,7 +259,10 @@ nearest_hospital %>%
   geom_sf(aes(fill = travel_time), col = NA) +
   facet_wrap(~percentil) +
   scale_fill_viridis_b(direction = -1, breaks = seq(0, 90, 15)) +
-  labs(fill = "Travel time \n(Minutes)") +
+  labs(
+    title = 'Closest hopsital by public transport in Glasgow',
+    fill = "Travel time \n(Minutes)"
+  ) +
   theme_void() +
   theme(legend.position = "bottom")
 
