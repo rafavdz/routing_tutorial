@@ -19,7 +19,7 @@ options(java.parameters = "-Xmx4G")
 library(r5r)
 
 # R5R Directory
-r5r_dir <- 'scotland_router'
+r5r_dir <- 'glasgow_router'
 # Read network
 r5r_core <- setup_r5(data_path = r5r_dir)
 gc(reset = TRUE)
