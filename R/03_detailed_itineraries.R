@@ -17,6 +17,9 @@
 system("java -version")
 # This should display the name of the version, e.g. >java version “11.0.17”
 
+# Run the line below if you are working on a UoG Lab machine
+# Sys.setenv(JAVA_HOME = "C:/Program Files/Microsoft/jdk-11.0.22.7-hotspot/")
+
 # Allocate RAM to Java 
 options(java.parameters = "-Xmx4G")
 # Load R5R
