@@ -7,18 +7,18 @@
 ###########################################################################
 ###########################################################################
 
-# Date: December 2022
+# Date updated: Feb 2025
 
 # Set r5r and Java pars ---------------------------------------------------
 
-# Uses R5R V. 1.0.0
-# Requires JDK version is 11
-# Verify Java version
-system("java -version")
-# This should display the name of the version, e.g. >java version “11.0.17”
+# This tutorial uses R5R V. 2.0.0
+# R5R requires JDK version is 21
 
-# Run the line below if you are working on a UoG Lab machine
-# Sys.setenv(JAVA_HOME = "C:/Program Files/Microsoft/jdk-11.0.22.7-hotspot/")
+# We install necessary R packages
+install.packages('r5r')
+install.packages('rJavaEnv')
+# And respective Java version
+rJavaEnv::java_quick_install(version = 21)
 
 # Allocate RAM to Java 
 options(java.parameters = "-Xmx4G")
